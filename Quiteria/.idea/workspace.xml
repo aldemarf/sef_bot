@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ec0a6081-72d1-4996-83bf-34a08bd0771e" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../bot_draft/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/quiteria.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/quiteria.sqlite" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/quiteria/config/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/quiteria/config/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/quiteria/config/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/src/quiteria/config/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/quiteria/domain/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/quiteria/domain/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/quiteria/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/quiteria/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/quiteria/quiteria.sqlite" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -52,8 +57,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/quiteria/main.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="189">
-                  <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+                <state relative-caret-position="-294">
+                  <caret line="7" column="22" lean-forward="true" selection-start-line="7" selection-start-column="22" selection-end-line="7" selection-end-column="22" />
                   <folding>
                     <element signature="e#0#14#0" expanded="true" />
                   </folding>
@@ -123,6 +128,9 @@
         <option value="$PROJECT_DIR$/src/quiteria/domain/room.py" />
         <option value="$PROJECT_DIR$/src/quiteria/persistence/__init__.py" />
         <option value="$PROJECT_DIR$/src/quiteria/config/var.py" />
+        <option value="$PROJECT_DIR$/src/quiteria/domain/__init__.py" />
+        <option value="$PROJECT_DIR$/src/quiteria/config/__init__.py" />
+        <option value="$PROJECT_DIR$/src/quiteria/config/requirements.txt" />
         <option value="$PROJECT_DIR$/src/quiteria/main.py" />
       </list>
     </option>
@@ -232,11 +240,12 @@
   </component>
   <component name="PropertiesComponent">
     <property name="DatabaseDriversLRU" value="sqlite" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/quiteria.sqlite" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="SQL Dialects" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -351,12 +360,12 @@
       <workItem from="1564080633052" duration="21161000" />
       <workItem from="1564144798292" duration="1311000" />
       <workItem from="1564146506164" duration="282000" />
-      <workItem from="1564146791269" duration="734000" />
+      <workItem from="1564146791269" duration="1889000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="64479000" />
+    <option name="totallyTimeSpent" value="65634000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-1" y="0" width="1922" height="1040" extended-state="6" />
@@ -443,9 +452,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/quiteria/config/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/venv/lib/python3.7/site-packages/telegram/replykeyboardmarkup.py" />
     <entry file="file://$APPLICATION_CONFIG_DIR$/consoles/db/30b11b86-3856-4a16-bf2a-4309918035d2/console.sql">
       <provider selected="true" editor-type-id="text-editor" />
@@ -517,13 +523,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/quiteria/config/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="21">
-          <caret line="1" column="7" lean-forward="true" selection-start-line="1" selection-start-column="7" selection-end-line="1" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/venv/lib/python3.7/site-packages/pyTelegramBotAPI-3.6.6-py3.7.egg-info/dependency_links.txt" />
     <entry file="file://$PROJECT_DIR$/venv/lib/python3.7/site-packages/pyTelegramBotAPI-3.6.6-py3.7.egg-info/installed-files.txt" />
     <entry file="file://$PROJECT_DIR$/venv/lib/python3.7/site-packages/pyTelegramBotAPI-3.6.6-py3.7.egg-info/requires.txt" />
@@ -538,10 +537,31 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/quiteria/domain/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/quiteria/config/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="21">
+          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/quiteria/config/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="21">
+          <caret line="1" column="16" lean-forward="true" selection-start-line="1" selection-start-column="16" selection-end-line="1" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/quiteria/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+        <state relative-caret-position="-294">
+          <caret line="7" column="22" lean-forward="true" selection-start-line="7" selection-start-column="22" selection-end-line="7" selection-end-column="22" />
           <folding>
             <element signature="e#0#14#0" expanded="true" />
           </folding>
