@@ -1,38 +1,14 @@
 import telebot
-from telebot.types import (InlineKeyboardMarkup, InlineKeyboardButton,
-                           ReplyKeyboardMarkup, ReplyKeyboardRemove)
-
+from quiteria.keyboards.keyboards import *
+from quiteria.resources.var import *
+from quiteria.resources.strings import *
 from quiteria.persistence.sqlite import UserDAO, SQLiteDB
-from quiteria.config.var import BOT_TOKEN
 
-# ## INIT DATABASE ###
+# ##  DATABASE INIT ###
 SQLiteDB.create_tables()
 
 
-# ## KEYBOARDS ###
-servicesSelection = InlineKeyboardMarkup(row_width=1)
-servicesSelection.add(InlineKeyboardButton('Ajuste de temperatura',
-                                           callback_data='cb_serv_temp'),
-                      InlineKeyboardButton('Agendamento de sala',
-                                           callback_data='cb_serv_room'),
-                      InlineKeyboardButton('Agendamento de manutenção',
-                                           callback_data='cb_serv_mnt'),
-                      InlineKeyboardButton('Leitura de sensores',
-                                           callback_data='cb_serv_sens'))
-
-loginSelection = ReplyKeyboardMarkup(row_width=1,
-                                     one_time_keyboard=True)
-loginSelection.add("Fazer login", "Realizar cadastro")
-
-yesNoSelection = InlineKeyboardMarkup(row_width=2)
-yesNoSelection.add(InlineKeyboardButton('Sim', callback_data='cb_lg_yes'),
-                   InlineKeyboardButton('Não', callback_data='cb_lg_no',))
-
-hideBoard = ReplyKeyboardRemove()
-hideInlineBoard = InlineKeyboardMarkup()
-
-
-# ## LISTENER / LOG ###
+# ## LISTENER | LOG ###
 def listener(messages):
     """
     When new messages arrive TeleBot will call this function.
@@ -47,6 +23,7 @@ def listener(messages):
                   + m.text)
 
 
+# ## BOT INIT & CONFIG ###
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.set_update_listener(listener)  # register listener
 
@@ -56,12 +33,11 @@ command_list = {
     'start': 'Iniciar uma conversa com Quitéria',
     'bye': 'Despedir-se de Quitéria',
     'services': 'Listar os serviços disponíveis',
-    'help': 'Mostrar esta descrição'
-}
+    'help': 'Mostrar esta descrição'}
 
 
 @bot.message_handler(commands=['start'])
-def quiteria_start(message):
+def command_start(message):
     chat_id = message.chat.id
     user_tg = message.from_user
     user_tg_id = user_tg.id
@@ -73,16 +49,16 @@ def quiteria_start(message):
         name = result[0].name
         bot.send_message(chat_id, "Olá, {}! \n".format(name)
                          + "Deseja logar no sistema?",
-                         reply_markup=yesNoSelection)
+                         reply_markup=loginSelection)
     else:
         name = user_tg.first_name
         bot.send_message(chat_id, "Olá, {}! \n".format(name)
-                         + "Deseja se cadastrar no sistema?",
-                         reply_markup=yesNoSelection)
+                         + "Deseja cadastrar-se no sistema?",
+                         reply_markup=registerSelection)
 
 
 @bot.message_handler(commands=['bye'])
-def command_end(message):
+def command_bye(message):
     chat_id = message.chat.id
     bot.send_message(chat_id, "Sessão encerrada.")
     bot.send_message(chat_id, "Até logo!")
@@ -115,24 +91,35 @@ def command_default(message):
 
 
 # ## CALLBACK HANDLERS ###
-@bot.callback_query_handler(func=lambda call: call.data == 'cb_lg_yes')
+@bot.callback_query_handler(func=lambda call: call.data == U_REGISTER_YES)
+def cb_register_yes(call):
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    bot.send_message(chat_id, 'Deseja aproveitar os dados do telegram?',
+                     reply_markup=)
+    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
+                                  reply_markup=hideInlineBoard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == ANS_YES)
 def cb_login_yes(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-    # quiteria.answer_callback_query(call.id, "Answer is Yes")
+    # bot.answer_callback_query(call.id, "Answer is Yes")
     bot.send_message(chat_id, 'Sim')
     bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
                                   reply_markup=hideInlineBoard)
 
 
-@bot.callback_query_handler(func=lambda call: call.data == 'cb_lg_no')
+@bot.callback_query_handler(func=lambda call: call.data == ANS_NO)
 def cb_login_no(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-    # quiteria.answer_callback_query(call.id, "Answer is No")
+    bot.answer_callback_query(call.id, "Answer is No", show_alert=True)
     bot.send_message(chat_id, 'Não')
     bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
                                   reply_markup=hideInlineBoard)
 
 
+# ## START BOT LISTENING ###
 bot.polling()

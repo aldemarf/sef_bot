@@ -1,7 +1,7 @@
 from sqlalchemy import (MetaData, create_engine, Table,
                         Column, String, Integer, Boolean)
 
-from bot.domain.user import User
+from quiteria.domain.user import User
 
 
 class SQLiteDB:
