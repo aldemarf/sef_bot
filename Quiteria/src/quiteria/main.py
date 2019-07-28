@@ -1,4 +1,8 @@
 import telebot
+from telebot.types import ForceReply
+
+from quiteria.domain.session import *
+from quiteria.domain.user import User
 from quiteria.keyboards.keyboards import *
 from quiteria.resources.var import *
 from quiteria.resources.strings import *
@@ -6,6 +10,9 @@ from quiteria.persistence.sqlite import UserDAO, SQLiteDB
 
 # ##  DATABASE INIT ###
 SQLiteDB.create_tables()
+
+# ## SESSION ###
+session = None
 
 
 # ## LISTENER | LOG ###
@@ -25,8 +32,7 @@ def listener(messages):
 
 # ## BOT INIT & CONFIG ###
 bot = telebot.TeleBot(BOT_TOKEN)
-bot.set_update_listener(listener)  # register listener
-
+bot.set_update_listener(listener)
 
 # ## COMMANDS ###
 command_list = {
@@ -40,14 +46,12 @@ command_list = {
 def command_start(message):
     chat_id = message.chat.id
     user_tg = message.from_user
-    user_tg_id = user_tg.id
     dao = UserDAO()
-    result = dao.get_user(user_tg_id)
+    result = dao.get_user(user_tg.id)
 
     if len(result) > 0:
-        print(result)
-        name = result[0].name
-        bot.send_message(chat_id, "Olá, {}! \n".format(name)
+        user = result[0]
+        bot.send_message(chat_id, "Olá, {}! \n".format(user.name)
                          + "Deseja logar no sistema?",
                          reply_markup=loginSelection)
     else:
@@ -85,7 +89,6 @@ def quiteria_menu(message):
 # Default answer for unknown commands
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def command_default(message):
-    # this is the standard reply to a normal message
     bot.reply_to(message, "Não entendi."
                           " Talvez o comando /help possa lhe ajudar.")
 
@@ -95,18 +98,56 @@ def command_default(message):
 def cb_register_yes(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-    bot.send_message(chat_id, 'Deseja aproveitar os dados do telegram?',
-                     reply_markup=)
-    bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
+    bot.edit_message_reply_markup(chat_id=chat_id,
+                                  message_id=message_id,
                                   reply_markup=hideInlineBoard)
+    bot.send_message(chat_id, 'R: Sim')
+    bot.send_message(chat_id, 'Deseja aproveitar os dados do telegram?',
+                     reply_markup=reuseKeyboard)
+
+
+@bot.callback_query_handler(func=lambda call: call.data == R_REUSE_YES)
+def cb_reuse_yes(call):
+    global session
+    chat_id = call.message.chat.id
+    message_id = call.message.message_id
+    tgUser = call.from_user
+
+    bot.edit_message_reply_markup(chat_id=chat_id,
+                                  message_id=message_id,
+                                  reply_markup=hideInlineBoard)
+    bot.send_message(chat_id, 'R: Sim')
+    bot.send_message(chat_id, 'Telegram ID : {}\nNome : {}'
+                     .format(tgUser.id, tgUser.first_name))
+    session.user = User(telegram_id=tgUser.id,
+                        name=tgUser.first_name)
+    bot.answer_callback_query(call.id, 'Dados importados com sucesso.')
+    bot.send_message(chat_id, 'Agora vamos cadastrar sua senha.')
+    msg = bot.send_message(tgUser.id,'Digite sua senha:',
+                           reply_markup=ForceReply(selective=True))
+    bot.register_next_step_handler(msg, register_password)
+
+
+def register_password(message):
+    chat_id = message.chat.id
+    message_id = message.message_id
+    tgUser = message.from_user
+    password = message.text
+
+    if len(password) < 4:
+        msg = bot.reply_to(message, 'A senha deve ter pelo menos 5 caracteres')
+        bot.register_next_step_handler(msg, register_password)
+        return
+    userSession = Session.SESSIONS[tgUser.id]
+    userSession.user
+    pass
 
 
 @bot.callback_query_handler(func=lambda call: call.data == ANS_YES)
 def cb_login_yes(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
-    # bot.answer_callback_query(call.id, "Answer is Yes")
-    bot.send_message(chat_id, 'Sim')
+    bot.send_message(chat_id, 'R: Sim')
     bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
                                   reply_markup=hideInlineBoard)
 
@@ -116,7 +157,7 @@ def cb_login_no(call):
     chat_id = call.message.chat.id
     message_id = call.message.message_id
     bot.answer_callback_query(call.id, "Answer is No", show_alert=True)
-    bot.send_message(chat_id, 'Não')
+    bot.send_message(chat_id, 'R: Não')
     bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id,
                                   reply_markup=hideInlineBoard)
 
