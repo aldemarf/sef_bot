@@ -33,9 +33,14 @@ yesNoSelection = InlineKeyboardMarkup(row_width=2)
 yesNoSelection.add(InlineKeyboardButton('Sim', callback_data=ANS_YES),
                    InlineKeyboardButton('Não', callback_data=ANS_NO, ))
 
+
+reuseKeyboard = InlineKeyboardMarkup(row_width=2)
+reuseKeyboard.add(InlineKeyboardButton('Sim', callback_data=R_REUSE_YES),
+                  InlineKeyboardButton('Não', callback_data=R_REUSE_NO))
+
 hideInlineBoard = InlineKeyboardMarkup()
 
-# ## REPLY KEYBOARDS ###
 
+# ## REPLY KEYBOARDS ###
 hideBoard = ReplyKeyboardRemove()
 
