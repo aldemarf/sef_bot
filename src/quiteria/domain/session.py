@@ -2,29 +2,29 @@ from datetime import datetime
 
 
 class Session:
-    SESSIONS = dict()
+    sessions = dict()
 
-    def __init__(self, id=None, user=None, lastAcess=None, isLogged=False):
+    def __init__(self, id=None, user=None, lastAcess=None, logged=False):
         self.id = id
         self.user = user
         self.lastAcess = lastAcess
-        self.isLogged = isLogged
+        self.logged = logged
 
     @classmethod
-    def setSession(cls, telegramID=None):
+    def setSession(cls, telegramID):
         session = Session()
-        cls.SESSIONS[telegramID] = session
+        cls.sessions[telegramID] = session
 
     @classmethod
     def startSession(cls, telegramID, user):
-        session = cls.SESSIONS[telegramID]
+        session = cls.sessions[telegramID]
         session.lastAcess = datetime.now()
         session.user = user
 
     @classmethod
     def endSession(cls, telegramID):
-        if telegramID in cls.SESSIONS:
-            del cls.SESSIONS[telegramID]
+        if telegramID in cls.sessions:
+            del cls.sessions[telegramID]
         else:
             raise KeyError('Sessão inexistente')
 
