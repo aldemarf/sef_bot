@@ -1,3 +1,4 @@
+# coding=utf-8
 import telebot
 from telebot.types import ForceReply
 
@@ -10,6 +11,7 @@ from quiteria.persistence.sqlite import UserDAO, SQLiteDB
 
 # ##  DATABASE INIT ###
 SQLiteDB.create_tables()
+
 
 # ## SESSION ###
 session = None
