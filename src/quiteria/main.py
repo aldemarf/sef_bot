@@ -1,4 +1,8 @@
 # coding=utf-8
+import logging
+
+from collections import OrderedDict
+
 import telebot
 from telebot.types import ForceReply
 
@@ -8,6 +12,7 @@ from quiteria.keyboards.keyboards import *
 from quiteria.resources.var import *
 from quiteria.resources.strings import *
 from quiteria.persistence.sqlite import UserDAO, SQLiteDB
+
 
 # ##  DATABASE INIT ###
 SQLiteDB.create_tables()
@@ -22,14 +27,14 @@ def listener(messages):
     """
     When new messages arrive TeleBot will call this function.
     """
-    for m in messages:
-        if m.content_type == 'text':
+    for message in messages:
+        if message.content_type == 'text':
             # print the sent message to the console
-            print(str(m.chat.first_name)
-                  + " ["
-                  + str(m.chat.id)
-                  + "]: "
-                  + m.text)
+            logging.info(
+                '{} [{}]: {}'
+                    .format(message.chat.first_name,
+                            message.chat.id,
+                            message.text))
 
 
 # ## BOT INIT & CONFIG ###
@@ -37,19 +42,24 @@ bot = telebot.TeleBot(BOT_TOKEN)
 bot.set_update_listener(listener)
 
 # ## COMMANDS ###
-command_list = {
+command_list = OrderedDict({
+    'unlogged':'**Usuários não logados**:',
     'start': 'Iniciar uma conversa com Quitéria',
+    'help': 'Mostrar esta descrição',
     'bye': 'Despedir-se de Quitéria',
-    'services': 'Listar os serviços disponíveis',
-    'help': 'Mostrar esta descrição'}
+    'logged':'**Usuários logados**:',
+    'services': 'Listar os serviços disponíveis'
+})
 
 
 @bot.message_handler(commands=['start'])
 def command_start(message):
     chat_id = message.chat.id
-    user_tg = message.from_user
+    tgUser = message.from_user
     dao = UserDAO()
-    result = dao.get_user(user_tg.id)
+    result = dao.get_user(tgUser.id)
+
+    Session.setSession(tgUser.id)
 
     if len(result) > 0:
         user = result[0]
@@ -57,7 +67,7 @@ def command_start(message):
                          + "Deseja logar no sistema?",
                          reply_markup=loginSelection)
     else:
-        name = user_tg.first_name
+        name = tgUser.first_name
         bot.send_message(chat_id, "Olá, {}! \n".format(name)
                          + "Deseja cadastrar-se no sistema?",
                          reply_markup=registerSelection)
@@ -65,26 +75,44 @@ def command_start(message):
 
 @bot.message_handler(commands=['bye'])
 def command_bye(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id, "Sessão encerrada.")
-    bot.send_message(chat_id, "Até logo!")
+    chatID = message.chat.id
+    tgUserID = message.from_user.id
+
+    try:
+        Session.endSession(tgUserID)
+        bot.send_message(chatID, "Sessão encerrada.")
+        bot.send_message(chatID, "Até logo!")
+    except Exception:
+        logging.error('Sessão não encontrada.', exc_info=True)
 
 
 @bot.message_handler(commands=['help'])
-def command_help(m):
-    cid = m.chat.id
-    help_text = "Os seguintes comandos estão disponíveis: \n"
+def command_help(message):
+    chatID = message.chat.id
+    helpText = "Os seguintes comandos estão disponíveis: \n"
 
     for key, value in command_list.items():
-        help_text += "/" + key + ": " + value + "\n"
-    bot.send_message(cid, help_text)
+        if key.endswith('logged'):
+            helpText += '\n\n{}\n'.format(value)
+            continue
+        helpText += '/{} : {}\n'.format(key, value)
+    bot.send_message(chatID, helpText, parse_mode='MARKDOWN')
 
 
 @bot.message_handler(commands=['services'])
 def quiteria_menu(message):
-    chat_id = message.chat.id
+    tgUserID = message.from_user.id
+    session = Session.sessions[tgUserID]
+
+    if not session.logged:
+        bot.send_message(tgUserID,
+                         'Serviços disponíveis apenas para'
+                         ' usuários logados no sistema.')
+        return
+
+    chatID = message.chat.id
     services_text = "Serviços disponíveis: \n"
-    bot.send_message(chat_id, services_text,
+    bot.send_message(chatID, services_text,
                      reply_markup=servicesSelection)
 
 
@@ -98,51 +126,83 @@ def command_default(message):
 # ## CALLBACK HANDLERS ###
 @bot.callback_query_handler(func=lambda call: call.data == U_REGISTER_YES)
 def cb_register_yes(call):
-    chat_id = call.message.chat.id
-    message_id = call.message.message_id
-    bot.edit_message_reply_markup(chat_id=chat_id,
-                                  message_id=message_id,
+    chatID = call.message.chat.id
+    messageID = call.message.message_id
+    bot.edit_message_reply_markup(chat_id=chatID,
+                                  message_id=messageID,
                                   reply_markup=hideInlineBoard)
-    bot.send_message(chat_id, 'R: Sim')
-    bot.send_message(chat_id, 'Deseja aproveitar os dados do telegram?',
+    bot.send_message(chatID, 'R: Sim')
+    bot.send_message(chatID, 'Deseja aproveitar os dados do telegram?',
                      reply_markup=reuseKeyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == R_REUSE_YES)
 def cb_reuse_yes(call):
-    global session
-    chat_id = call.message.chat.id
-    message_id = call.message.message_id
+    chatID = call.message.chat.id
+    messageID = call.message.message_id
     tgUser = call.from_user
+    userSession = Session.sessions[tgUser.id]
 
-    bot.edit_message_reply_markup(chat_id=chat_id,
-                                  message_id=message_id,
+    bot.edit_message_reply_markup(chat_id=chatID,
+                                  message_id=messageID,
                                   reply_markup=hideInlineBoard)
-    bot.send_message(chat_id, 'R: Sim')
-    bot.send_message(chat_id, 'Telegram ID : {}\nNome : {}'
+
+    bot.send_message(chatID, 'R: Sim')
+    bot.send_message(chatID, 'Telegram ID : {}\nNome : {}'
                      .format(tgUser.id, tgUser.first_name))
-    session.user = User(telegram_id=tgUser.id,
+    userSession.user = User(telegram_id=tgUser.id,
                         name=tgUser.first_name)
     bot.answer_callback_query(call.id, 'Dados importados com sucesso.')
-    bot.send_message(chat_id, 'Agora vamos cadastrar sua senha.')
+
+    bot.send_message(chatID, 'Agora vamos cadastrar sua senha.')
     msg = bot.send_message(tgUser.id,'Por favor, digite sua senha:',
                            reply_markup=ForceReply(selective=True))
     bot.register_next_step_handler(msg, register_password)
 
 
 def register_password(message):
-    chat_id = message.chat.id
-    message_id = message.message_id
-    tgUser = message.from_user
+    chatID = message.chat.id
+    messageID = message.message_id
+    tgUserID = message.from_user.id
     password = message.text
+    userSession = Session.sessions[tgUserID]
+
+    bot.delete_message(chatID,messageID)
+    bot.send_message(chatID, '****')
 
     if len(password) < 4:
-        msg = bot.reply_to(message, 'A senha deve ter pelo menos 5 caracteres')
+        msg = bot.send_message(chatID,
+                               'A senha deve ter no mínimo 4 caracteres')
         bot.register_next_step_handler(msg, register_password)
         return
-    userSession = Session.SESSIONS[tgUser.id]
-    userSession.user
-    pass
+
+    userSession.user.password = password
+
+    msg = bot.send_message(tgUserID, 'Por favor, repita senha:',
+                           reply_markup=ForceReply(selective=True))
+    bot.register_next_step_handler(msg, confirm_password)
+
+def confirm_password(message):
+    chatID = message.chat.id
+    messageID = message.message_id
+    tgUserID = message.from_user.id
+    confirmPwd = message.text
+    userSession = Session.sessions[tgUserID]
+
+    bot.delete_message(chatID, messageID)
+    bot.send_message(chatID, '****')
+
+    if len(confirmPwd) < 4 or confirmPwd != userSession.user.password:
+        msg = bot.send_message(chatID, 'A senha deve ter no mínimo 4'
+                                        ' caracteres e ser igual a anterior',
+                               reply_markup=ForceReply(selective=True))
+        bot.register_next_step_handler(msg, confirm_password)
+        return
+
+    bot.send_message(tgUserID, 'Senha configurada com sucesso.')
+
+    dao = UserDAO()
+    dao.insert_user(userSession.user)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == ANS_YES)
