@@ -1,8 +1,6 @@
 from sqlalchemy import (MetaData, create_engine, Table,
                         Column, String, Integer, Boolean, Date)
 
-from quiteria.domain.user import User
-
 
 class SQLiteDB:
 
@@ -18,7 +16,6 @@ class SQLiteDB:
     C_SESSION_USER_ID = 'user_id'
     C_SESSION_LAST_ACCESS = 'last_acess'
     C_SESSION_ISLOGGED = 'is_logged'
-
 
     # USER COLUMNS
     C_USER_ID = 'id'
@@ -42,21 +39,21 @@ class SQLiteDB:
     DB_PATH = DB_FILE
 
 
-    @staticmethod
-    def create_sessions_table(engine):
+    @classmethod
+    def create_sessions_table(cls, engine):
         metadata = MetaData()
         Table(
-            SQLiteDB.SESSIONS_TABLE, metadata,
-            Column(SQLiteDB.C_SESSION_ID, Integer,
+            cls.SESSIONS_TABLE, metadata,
+            Column(cls.C_SESSION_ID, Integer,
                    primary_key=True,
                    autoincrement=True,
                    nullable=False),
-            Column(SQLiteDB.C_SESSION_USER_ID, Integer,
+            Column(cls.C_SESSION_USER_ID, Integer,
                    nullable=False,
                    unique=True),
-            Column(SQLiteDB.C_SESSION_LAST_ACCESS, Date,
+            Column(cls.C_SESSION_LAST_ACCESS, Date,
                    nullable=False),
-            Column(SQLiteDB.C_SESSION_ISLOGGED, Boolean,
+            Column(cls.C_SESSION_ISLOGGED, Boolean,
                    nullable=False,
                    unique=True)
         ).create(engine, checkfirst=True)
@@ -88,6 +85,7 @@ class SQLiteDB:
                    default=False)
         ).create(engine, checkfirst=True)
 
+
     @staticmethod
     def create_maintenance_table(engine):
         metadata = MetaData()
@@ -98,6 +96,7 @@ class SQLiteDB:
                    autoincrement=True,
                    nullable=False)
         ).create(engine, checkfirst=True)
+
 
     @staticmethod
     def create_room_table(engine):
@@ -110,36 +109,37 @@ class SQLiteDB:
                    nullable=False)
         ).create(engine, checkfirst=True)
 
-    @staticmethod
-    def create_tables():
-        engine = create_engine(SQLiteDB.DB_PATH, echo=True)
-        SQLiteDB.create_sessions_table(engine)
-        SQLiteDB.create_user_table(engine)
-        SQLiteDB.create_room_table(engine)
-        SQLiteDB.create_maintenance_table(engine)
 
-    @staticmethod
-    def drop_user_table(engine):
+    @classmethod
+    def create_tables(cls):
+        engine = create_engine(cls.DB_PATH, echo=True)
+        cls.create_sessions_table(engine)
+        cls.create_user_table(engine)
+        cls.create_room_table(engine)
+        cls.create_maintenance_table(engine)
+
+
+    @classmethod
+    def drop_user_table(cls, engine):
         metadata = MetaData()
-        Table(SQLiteDB.USER_TABLE, metadata).drop(engine, checkfirst=True)
+        Table(cls.USER_TABLE, metadata).drop(engine, checkfirst=True)
 
-    @staticmethod
-    def drop_maintenance_table(engine):
+    @classmethod
+    def drop_maintenance_table(cls, engine):
         metadata = MetaData()
-        Table(SQLiteDB.USER_TABLE, metadata).drop(engine, checkfirst=True)
+        Table(cls.USER_TABLE, metadata).drop(engine, checkfirst=True)
 
-    @staticmethod
-    def drop_room_table(engine):
+    @classmethod
+    def drop_room_table(cls, engine):
         metadata = MetaData()
-        Table(SQLiteDB.USER_TABLE, metadata).drop(engine, checkfirst=True)
+        Table(cls.USER_TABLE, metadata).drop(engine, checkfirst=True)
 
-    @staticmethod
-    def drop_tables():
-        engine = create_engine(SQLiteDB.DB_PATH, echo=True)
-        SQLiteDB.drop_user_table(engine)
-        SQLiteDB.drop_room_table(engine)
-        SQLiteDB.drop_maintenance_table(engine)
-
+    @classmethod
+    def drop_tables(cls):
+        engine = create_engine(cls.DB_PATH, echo=True)
+        cls.drop_user_table(engine)
+        cls.drop_room_table(engine)
+        cls.drop_maintenance_table(engine)
 
 #########################################################
 

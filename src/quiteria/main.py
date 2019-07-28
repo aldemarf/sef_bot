@@ -123,7 +123,7 @@ def cb_reuse_yes(call):
                         name=tgUser.first_name)
     bot.answer_callback_query(call.id, 'Dados importados com sucesso.')
     bot.send_message(chat_id, 'Agora vamos cadastrar sua senha.')
-    msg = bot.send_message(tgUser.id,'Digite sua senha:',
+    msg = bot.send_message(tgUser.id,'Por favor, digite sua senha:',
                            reply_markup=ForceReply(selective=True))
     bot.register_next_step_handler(msg, register_password)
 
