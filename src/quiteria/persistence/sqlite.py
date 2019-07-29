@@ -182,7 +182,7 @@ class UserDAO:
         if result is None:
             raise RuntimeError("Dados invalidos")
         else:
-            user.from_proxy(result)
+            user.fromProxy(result)
 
         return user
 
