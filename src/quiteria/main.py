@@ -6,7 +6,7 @@ from telebot.types import ForceReply
 
 from quiteria.domain.session import *
 from quiteria.domain.user import User
-from quiteria.keyboards.keyboards import *
+from quiteria.resources.keyboards import *
 from quiteria.resources.settings import *
 from quiteria.resources.var import *
 from quiteria.resources.strings import *
