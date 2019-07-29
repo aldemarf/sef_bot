@@ -170,20 +170,21 @@ class UserDAO:
         sel = sel.where(user.c.telegram_id == telegram_id)
 
         with self.engine.connect() as connection:
-            result = connection.execute(sel).fetchall()
+            result = connection.execute(sel).fetchone()
 
-        return result
+        return self.createUser(result)
 
     @staticmethod
-    def create_user(data):
-        # TODO :
-        # user = User()
-        # if data is None:
-        #     raise RuntimeError("Dados invalidos")
-        # else:
-        #     user.from_dict(data)
-        # return user
-        pass
+    def createUser(result):
+        from quiteria.domain.user import User
+
+        user = User()
+        if result is None:
+            raise RuntimeError("Dados invalidos")
+        else:
+            user.from_proxy(result)
+
+        return user
 
 
 class RoomDAO:
