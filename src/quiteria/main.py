@@ -31,6 +31,7 @@ def listener(messages):
 bot = telebot.TeleBot(BOT_TOKEN)
 bot.set_update_listener(listener)
 
+
 # ## COMMANDS ###
 command_list = OrderedDict({
     'unlogged': '**Usuários não logados**:',
@@ -53,8 +54,17 @@ def command_start(message):
 
     Session.setSession(tgUser.id)
 
+    helpText = "Os seguintes comandos estão disponíveis: \n"
+
+    for key, value in command_list.items():
+        if key.endswith('logged'):
+            helpText += '\n\n{}\n'.format(value)
+            continue
+        helpText += '/{} : {}\n'.format(key, value)
+    bot.send_message(chatID, helpText, parse_mode='MARKDOWN')
+
     if len(result) > 0:
-        user = result[0]
+        user = result
         bot.send_message(chatID, "Olá, {}! \n".format(user.name)
                          + "Deseja logar no sistema?",
                          reply_markup=loginSelection)
@@ -67,12 +77,23 @@ def command_start(message):
 
 @bot.message_handler(commands=['login'])
 def command_login(message):
-    tgUserID = message.message.from_user.id
+    tgUserID = message.from_user.id
+    dao = UserDAO()
+    user = dao.get_user(tgUserID)
 
-    msg = bot.send_message(tgUserID, 'Por favor, digite sua senha:',
-                           reply_markup=ForceReply(selective=True))
+    try:
+        session = Session.sessions[tgUserID]
+    except KeyError:
+        session = Session.setSession(tgUserID)
 
-    bot.register_next_step_handler(msg, do_login)
+    if user:
+        session.user = user
+        msg = bot.send_message(tgUserID, 'Por favor, digite sua senha:',
+                               reply_markup=ForceReply(selective=True))
+        bot.register_next_step_handler(msg, do_login)
+    else:
+        bot.send_message(tgUserID, "Deseja cadastrar-se no sistema?",
+                         reply_markup=registerSelection)
 
 
 @bot.message_handler(commands=['bye'])
@@ -136,7 +157,7 @@ def cb_register_yes(call):
                                   message_id=messageID,
                                   reply_markup=hideInlineBoard)
     bot.send_message(chatID, 'R: Sim')
-    bot.send_message(chatID, 'Deseja o nome cadastrado no telegram?',
+    bot.send_message(chatID, 'Deseja utilzar o nome cadastrado no telegram?',
                      reply_markup=reuseKeyboard)
 
 
@@ -252,8 +273,8 @@ def confirm_password(message):
     bot.send_message(tgUserID, 'Senha configurada com sucesso.')
 
     dao = UserDAO()
-    result = dao.insert_user(userSession.user)
-    userSession.user.id = result.inserted_primary_key
+    userSession.user.id = dao.insert_user(userSession.user)
+
     bot.send_message(tgUserID, 'Seu cadastro foi concluído.\n'
                                'Deseja realizar o login?',
                      reply_markup=loginSelection)
@@ -276,9 +297,9 @@ def cb_login_yes(call):
 
 
 def do_login(message):
-    chatID = message.message.chat.id
-    messageID = message.message.message_id
-    tgUserID = message.message.from_user.id
+    chatID = message.chat.id
+    messageID = message.message_id
+    tgUserID = message.from_user.id
     password = message.text
 
     session = Session.sessions[tgUserID]
@@ -299,6 +320,8 @@ def do_login(message):
 
     session.logged = True
     session.loginAttempts = 0
+    session.startSession(tgUserID)
+    bot.send_message(chatID, 'Login realizado com sucesso!')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == U_LOGIN_NO)
@@ -308,7 +331,8 @@ def cb_login_no(call):
     bot.send_message(chatID, 'R: Não')
     bot.edit_message_reply_markup(chat_id=chatID, message_id=messageID,
                                   reply_markup=hideInlineBoard)
-    bot.send_message(chatID, 'Ok, mas ficarei impossibilitada de lhe ajudar.')
+    bot.send_message(chatID, 'Ok, mas terei recursos limitados'
+                             ' para lhe ajudar.')
 
 
 # ## START BOT LISTENING ###
