@@ -16,12 +16,12 @@ class Session:
     def setSession(cls, telegram_id):
         session = Session()
         cls.sessions[telegram_id] = session
+        return session
 
     @classmethod
-    def startSession(cls, telegram_id, user):
+    def startSession(cls, telegram_id):
         session = cls.sessions[telegram_id]
         session.lastAcess = datetime.now()
-        session.user = user
 
     @classmethod
     def endSession(cls, telegram_id):
