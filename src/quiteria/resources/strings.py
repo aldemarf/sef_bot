@@ -1,4 +1,4 @@
-# ## CALLBACK DATAS ###
+# ## CALLBACK DATA STRINGS ###
 SERV_TEMP = 'cb_serv_temp'
 SERV_ROOM = 'cb_serv_room'
 SERV_MNT = 'cb_serv_mnt'
