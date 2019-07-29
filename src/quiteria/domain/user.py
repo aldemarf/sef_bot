@@ -19,13 +19,14 @@ class User:
                     self.role, self.active
                     )
 
-    def from_dict(self, dic):
-        # self.id = dic['id']
-        # self.telegramID = dic['telegramID']
-        # self.name = dic['name']
-        # self.email = dic['email']
-        # self.password = dic['pwd']
-        # self.lab = dic['lab']
-        # self.role = dic['role']
-        # self.active = dic['active']
-        pass
+    def fromProxy(self, proxy):
+        from quiteria.persistence.sqlite import SQLiteDB
+
+        self.id = proxy[SQLiteDB.C_USER_ID]
+        self.telegramID = proxy[SQLiteDB.C_USER_TG_ID]
+        self.name = proxy[SQLiteDB.C_USER_NAME]
+        self.email = proxy[SQLiteDB.C_USER_EMAIL]
+        self.password = proxy[SQLiteDB.C_USER_PWD]
+        self.lab = proxy[SQLiteDB.C_USER_LAB]
+        self.role = proxy[SQLiteDB.C_USER_ROLE]
+        self.active = proxy[SQLiteDB.C_USER_ACTIVE]
