@@ -1,2 +1,11 @@
 BOT_TOKEN = '812078213:AAFHFxTKHbS8Pwy4vx9IB5LBLja7OK-9UgM'
 SOURCE_URL="http://"
+
+# ## MQTT ###
+BROKER_URL = 'raspberrypi.local'
+BROKER_PORT = 1883
+DHT_TOPIC = 'th0'
+TEMPERATURE_TOPIC = "th0/temperature"
+HUMIDITY_TOPIC = "th0/humidity"
+PUB_SLEEP_TIME = 3
+KEEP_ALIVE_BROKER = 60
