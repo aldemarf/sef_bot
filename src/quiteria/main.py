@@ -1,5 +1,7 @@
+
 # coding=utf-8
 from collections import OrderedDict
+from encodings.utf_8 import decode
 
 import telebot
 from telebot.types import ForceReply
@@ -160,6 +162,17 @@ def cb_register_yes(call):
                      reply_markup=reuseKeyboard)
 
 
+@bot.callback_query_handler(func=lambda call: call.data == U_REGISTER_NO)
+def cb_register_yes(call):
+    chatID = call.message.chat.id
+    messageID = call.message.message_id
+    bot.send_message(chatID, 'R: Não')
+    bot.edit_message_reply_markup(chat_id=chatID, message_id=messageID,
+                                  reply_markup=hideInlineBoard)
+    bot.send_message(chatID, 'Ok, mas terei recursos limitados'
+                             ' para lhe ajudar.')
+
+
 @bot.callback_query_handler(func=lambda call: call.data == R_REUSE_YES)
 def cb_reuse_yes(call):
     chatID = call.message.chat.id
@@ -207,13 +220,13 @@ def has_number(sentence):
 
 
 def register_name(message):
-    chatID = message.message.chat.id
-    messageID = message.message.message_id
+    chatID = message.chat.id
+    messageID = message.message_id
     tgUser = message.from_user
     userSession = Session.sessions[tgUser.id]
     name = message.text
 
-    if name < 2 or has_number(name):
+    if len(name) < 2 or has_number(name):
         bot.delete_message(chatID, messageID)
         msg = bot.send_message(chatID, 'Nome inválido. Tente novamente.')
         bot.register_next_step_handler(msg, register_name)
@@ -238,7 +251,7 @@ def register_password(message):
     bot.delete_message(chatID, messageID)
     bot.send_message(chatID, '****')
 
-    if len(password) < MIN_PWD_LENGHT:
+    if len(password) <= MIN_PWD_LENGHT:
         msg = bot.send_message(chatID,
                                'A senha deve ter no mínimo 4 caracteres')
         bot.register_next_step_handler(msg, register_password)
@@ -261,7 +274,7 @@ def confirm_password(message):
     bot.delete_message(chatID, messageID)
     bot.send_message(chatID, '****')
 
-    if len(confirmPwd) < MIN_PWD_LENGHT \
+    if len(confirmPwd) <= MIN_PWD_LENGHT \
             or confirmPwd != userSession.user.password:
         msg = bot.send_message(chatID, 'A senha deve ter no mínimo 4'
                                        ' caracteres e ser igual a anterior',
@@ -316,11 +329,11 @@ def do_login(message):
                                '{} tentativas restantes'.format(leftAttempts),
                                reply_markup=ForceReply(selective=True))
         bot.register_next_step_handler(msg, do_login)
-
-    session.logged = True
-    session.loginAttempts = 0
-    session.startSession(tgUserID)
-    bot.send_message(chatID, 'Login realizado com sucesso!')
+    else:
+        session.logged = True
+        session.loginAttempts = 0
+        session.startSession(tgUserID)
+        bot.send_message(chatID, 'Login realizado com sucesso!')
 
 
 @bot.callback_query_handler(func=lambda call: call.data == U_LOGIN_NO)
@@ -338,13 +351,16 @@ def cb_login_no(call):
 def cb_register_yes(call):
     chatID = call.message.chat.id
     messageID = call.message.message_id
+
     bot.edit_message_reply_markup(chat_id=chatID,
                                   message_id=messageID,
                                   reply_markup=hideInlineBoard)
+    bot.delete_message(chatID, messageID)
+
     try:
+        temp = float(mqtt_subscriber.last_messages())
         bot.send_message(chatID, 'O sensores estão indicando: {:.1f}°c'
-                         .format(mqtt_subscriber.last_messages()
-                                 .decode('utf-8')))
+                         .format(temp))
     except:
         bot.send_message(chatID, 'No momento o servidor encontra-se em'
                                  ' manutenção. Tente novamente mais tarde.')
