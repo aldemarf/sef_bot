@@ -4,13 +4,14 @@ from collections import OrderedDict
 import telebot
 from telebot.types import ForceReply
 
+from quiteria.domain import mqtt_subscriber
 from quiteria.domain.session import *
 from quiteria.domain.user import User
+from quiteria.persistence.sqlite import UserDAO, SQLiteDB
 from quiteria.resources.keyboards import *
 from quiteria.resources.settings import *
-from quiteria.resources.var import *
 from quiteria.resources.strings import *
-from quiteria.persistence.sqlite import UserDAO, SQLiteDB
+from quiteria.resources.var import *
 
 # ##  DATABASE INIT ###
 SQLiteDB.create_tables()
@@ -50,9 +51,8 @@ def command_start(message):
     tgUser = message.from_user
     dao = UserDAO()
     result = dao.get_user(tgUser.id)
-    logging.info('{} resultado(s) encontrado(s)'.format(len(result)))
 
-    Session.setSession(tgUser.id)
+    session = Session.getSession(tgUser.id)
 
     helpText = "Os seguintes comandos estão disponíveis: \n"
 
@@ -63,8 +63,9 @@ def command_start(message):
         helpText += '/{} : {}\n'.format(key, value)
     bot.send_message(chatID, helpText, parse_mode='MARKDOWN')
 
-    if len(result) > 0:
+    if result is not None:
         user = result
+        session.user = user
         bot.send_message(chatID, "Olá, {}! \n".format(user.name)
                          + "Deseja logar no sistema?",
                          reply_markup=loginSelection)
@@ -79,19 +80,17 @@ def command_start(message):
 def command_login(message):
     tgUserID = message.from_user.id
     dao = UserDAO()
-    user = dao.get_user(tgUserID)
+    result = dao.get_user(tgUserID)
 
-    try:
-        session = Session.sessions[tgUserID]
-    except KeyError:
-        session = Session.setSession(tgUserID)
+    session = Session.getSession(tgUserID)
 
-    if user:
-        session.user = user
+    if result:
+        session.user = result
         msg = bot.send_message(tgUserID, 'Por favor, digite sua senha:',
                                reply_markup=ForceReply(selective=True))
         bot.register_next_step_handler(msg, do_login)
     else:
+        session.user = User()
         bot.send_message(tgUserID, "Deseja cadastrar-se no sistema?",
                          reply_markup=registerSelection)
 
@@ -125,7 +124,7 @@ def command_help(message):
 @bot.message_handler(commands=['services'])
 def quiteria_menu(message):
     tgUserID = message.from_user.id
-    session = Session.sessions[tgUserID]
+    session = Session.getSession(tgUserID)
     logging.info('User logged: {}'.format(session.logged))
 
     if not session.logged:
@@ -284,7 +283,7 @@ def confirm_password(message):
 def cb_login_yes(call):
     chatID = call.message.chat.id
     messageID = call.message.message_id
-    tgUserID = call.message.from_user.id
+    tgUserID = call.from_user.id
 
     bot.send_message(chatID, 'R: Sim')
     bot.edit_message_reply_markup(chat_id=chatID, message_id=messageID,
@@ -333,6 +332,22 @@ def cb_login_no(call):
                                   reply_markup=hideInlineBoard)
     bot.send_message(chatID, 'Ok, mas terei recursos limitados'
                              ' para lhe ajudar.')
+
+
+@bot.callback_query_handler(func=lambda call: call.data == SERV_SENS)
+def cb_register_yes(call):
+    chatID = call.message.chat.id
+    messageID = call.message.message_id
+    bot.edit_message_reply_markup(chat_id=chatID,
+                                  message_id=messageID,
+                                  reply_markup=hideInlineBoard)
+    try:
+        bot.send_message(chatID, 'O sensores estão indicando: {:.1f}°c'
+                         .format(mqtt_subscriber.last_messages()
+                                 .decode('utf-8')))
+    except:
+        bot.send_message(chatID, 'No momento o servidor encontra-se em'
+                                 ' manutenção. Tente novamente mais tarde.')
 
 
 # ## START BOT LISTENING ###
