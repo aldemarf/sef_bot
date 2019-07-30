@@ -180,7 +180,7 @@ class UserDAO:
 
         user = User()
         if result is None:
-            raise RuntimeError("Dados invalidos")
+            return None
         else:
             user.fromProxy(result)
 
